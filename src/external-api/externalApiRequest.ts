@@ -9,6 +9,19 @@ interface Event {
   id: string;
 }
 
+interface User {
+  name: string;
+  email: string;
+  telegramId: string;
+  submitedName: string;
+}
+
+interface GraphQLResponse {
+  data?: User;
+  errors?: any[];
+  response?: any;
+}
+
 interface EventRequestApiResponse {
   events: Event[];
 }
@@ -44,7 +57,7 @@ export class ExternalApiService {
     }
   }
 
-  async createUser(name, email, telegramId, submitedName): Promise<any> {
+  async createUser(telegramId, name): Promise<any> {
     const query = gql`
       mutation ($data: UserCreateInput!) {
         createUser(data: $data) {
@@ -58,16 +71,19 @@ export class ExternalApiService {
     const variables = {
       data: {
         name: name,
-        email: email,
         telegramId: telegramId,
-        submitedName: submitedName,
       },
     };
 
     try {
       const data = await request(this.endpoint, query, variables);
+      this.logger.debug(`create user: ${data}`);
+      if (data!) {
+        return data;
+      } else {
+        return 'error';
+      }
       // this.createTicket(variables.data.telegramId);
-      return data;
     } catch (error) {
       console.error('Error creating user:', error);
       throw new Error('Error creating user');
@@ -111,4 +127,6 @@ export class ExternalApiService {
       throw new Error('Error creating ticket');
     }
   }
+
+  async
 }

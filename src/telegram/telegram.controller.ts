@@ -2,12 +2,14 @@ import { Controller, Logger } from '@nestjs/common';
 import { Context, Telegraf } from 'telegraf';
 import 'dotenv/config';
 import { TelegramService } from './telegram.service';
+import { ExternalApiService } from 'src/external-api/externalApiRequest';
 
 @Controller('telegram')
 export class TelegramController {
   private bot: Telegraf;
   private logger = new Logger(TelegramController.name);
   telegramService = new TelegramService();
+  externalAPI = new ExternalApiService();
 
   constructor() {
     this.bot = new Telegraf(process.env.BOT_TOKEN);
@@ -28,6 +30,10 @@ export class TelegramController {
 
   private handleStart(ctx: Context) {
     this.logger.debug(ctx.message);
+    this.externalAPI.createUser(
+      ctx.message.from.id.toString(),
+      `${ctx.message.from.first_name} ${ctx.message.from.last_name}`,
+    );
     const inlineKeyboardMarkup = {
       inline_keyboard: [
         [{ text: 'Book Ticket', callback_data: 'button1' }],

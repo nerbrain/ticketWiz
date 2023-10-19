@@ -62,6 +62,9 @@ export class TelegramService {
               event.id,
             );
 
+            // this.externalAPI.createUser();
+            ctx.reply('Ticket Acquired');
+
             //clear variables
             this.name = null;
             this.email = null;
