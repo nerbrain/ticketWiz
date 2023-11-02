@@ -165,7 +165,7 @@ export class ExternalApiService {
     }
   }
 
-  async checkTickets(): Promise<any> {
+  async checkTickets(userId): Promise<any> {
     const query = gql`
       query Tickets($where: TicketWhereInput!) {
         tickets(where: $where) {
@@ -184,7 +184,7 @@ export class ExternalApiService {
       where: {
         owner: {
           telegramId: {
-            equals: '195156268',
+            equals: userId,
           },
         },
       },
@@ -192,7 +192,8 @@ export class ExternalApiService {
 
     try {
       const data: Tickets = await request(this.endpoint, query, variables);
-      if (data == undefined) {
+      this.logger.debug(`Tickets Data: ${data.tickets}`);
+      if (data == undefined || data.tickets.length === 0) {
         return undefined;
       } else {
         // this.logger.debug(data.tickets);
@@ -202,8 +203,8 @@ export class ExternalApiService {
         return data.tickets;
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      throw new Error('Error creating user');
+      console.error('Error finding tickets', error);
+      throw new Error('Error finding tickets');
     }
   }
 }

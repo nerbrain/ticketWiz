@@ -50,17 +50,21 @@ export class TelegramService {
   }
 
   public async viewTickets(ctx: Context) {
-    this.tickets = await this.externalAPI.checkTickets();
+    this.logger.debug(ctx.from.id.toString());
+    this.tickets = await this.externalAPI.checkTickets(ctx.from.id.toString());
 
-    ctx.reply(`These are all your booked tickets`);
+    if (this.tickets == undefined || this.tickets == null) {
+      return ctx.reply("It looks like you don't have any tickets");
+    } else {
+      ctx.reply(`These are all your booked tickets`);
+      const eventDisplayPromises = this.tickets.map((ticket) => {
+        return ctx.reply(
+          `Event Name: ${ticket.event.name}\nEvent Description: ${ticket.event.description}\nEvent Venue: ${ticket.event.venue}\nEvent Date: ${ticket.event.date}\n`,
+        );
+      });
 
-    const eventDisplayPromises = this.tickets.map((ticket) => {
-      return ctx.reply(
-        `Event Name: ${ticket.event.name}\nEvent Description: ${ticket.event.description}\nEvent Venue: ${ticket.event.venue}\nEvent Date: ${ticket.event.date}\n`,
-      );
-    });
-
-    await Promise.all(eventDisplayPromises);
+      await Promise.all(eventDisplayPromises);
+    }
   }
 
   // Function to handle event selection
