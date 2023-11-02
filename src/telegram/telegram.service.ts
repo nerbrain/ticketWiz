@@ -5,26 +5,13 @@ import { ExternalApiService } from '../external-api/externalApiRequest';
 
 @Injectable()
 export class TelegramService {
-  // private events: any[] = [
-  //   { id: 0, name: 'Event0' },
-  //   { id: 1, name: 'Event1' },
-  //   { id: 2, name: 'Event2' },
-  //   { id: 3, name: 'Event3' },
-  //   { id: 4, name: 'Event4' },
-  //   { id: 5, name: 'Event5' },
-  //   { id: 6, name: 'Event6' },
-  //   { id: 7, name: 'Event7' },
-  //   { id: 8, name: 'Event8' },
-  //   { id: 9, name: 'Event9' },
-  // ];
-
   externalAPI = new ExternalApiService();
-  // private events: Event[];
   public events: any;
-
+  public tickets: any;
   private logger = new Logger(TelegramService.name);
   private name: string;
   private email: string;
+  private currentEventId: any;
 
   public async bookTicket(ctx: Context) {
     ctx.reply('Book Event');
@@ -32,11 +19,19 @@ export class TelegramService {
   }
 
   public async viewEvents(ctx: Context, bot: Telegraf) {
-    // this.events = await this.externalAPI.fetchDataFromExternalApi();
     this.events = await this.externalAPI.fetchDataFromExternalApi();
     this.logger.debug(`Events ${this.events}`);
+
+    const eventDisplayPromises = this.events.map((event) => {
+      return ctx.reply(
+        ` Event Name: ${event.name}\nEvent Description: ${event.description}\nEvent Venue: ${event.venue}\nEvent Date: ${event.date}\n`,
+      );
+    });
+
+    await Promise.all(eventDisplayPromises);
+
     const buttons = this.events.map((event) =>
-      Markup.button.callback(event.name, `event-${event.id}`),
+      Markup.button.callback(`${event.name}`, `event-${event.id}`),
     );
 
     const keyboard = Markup.inlineKeyboard([...buttons], { columns: 2 });
@@ -45,33 +40,59 @@ export class TelegramService {
 
     // Handle the selected event
     this.events.forEach((event) => {
-      this.logger.debug(`event-${event.id}`);
+      this.logger.debug(`All events-${event.name}`);
       bot.action(`event-${event.id}`, (ctx) => {
+        this.logger.debug(`Selected Event - ${event.name}`);
         ctx.reply(`You selected ${event.name}`);
-        ctx.reply('Please enter your name:');
-        bot.on('text', (ctx) => {
-          if (!this.name) {
-            this.name = ctx.message.text; // Store the submitted name in the 'name' variable
-            this.logger.debug(`Submitted name: ${this.name}`);
-            ctx.reply('Please enter your email address:');
-          } else if (!this.email) {
-            this.email = ctx.message.text;
-            this.logger.debug(`Submitted email: ${this.email}`);
-            this.externalAPI.createTicket(
-              ctx.message.from.id.toString(),
-              event.id,
-            );
-
-            // this.externalAPI.createUser();
-            ctx.reply('Ticket Acquired');
-
-            //clear variables
-            this.name = null;
-            this.email = null;
-            // Proceed with the next step in the conversation flow
-          }
-        });
+        this.handleEventSelection(ctx, event.id, bot);
       });
+    });
+  }
+
+  public async viewTickets(ctx: Context) {
+    this.tickets = await this.externalAPI.checkTickets();
+
+    ctx.reply(`These are all your booked tickets`);
+
+    const eventDisplayPromises = this.tickets.map((ticket) => {
+      return ctx.reply(
+        `Event Name: ${ticket.event.name}\nEvent Description: ${ticket.event.description}\nEvent Venue: ${ticket.event.venue}\nEvent Date: ${ticket.event.date}\n`,
+      );
+    });
+
+    await Promise.all(eventDisplayPromises);
+  }
+
+  // Function to handle event selection
+  private handleEventSelection(ctx: Context, eventId: any, bot: Telegraf) {
+    this.currentEventId = eventId;
+    this.logger.debug(`handleEventSelection 1 - ${this.currentEventId}`);
+    // ctx.reply(`You selected ${event.name}`);
+    ctx.reply('Please enter your name:');
+
+    bot.on('text', (ctx) => {
+      if (!this.name) {
+        this.name = ctx.message.text; // Store the submitted name in the 'name' variable
+        this.logger.debug(`Submitted name: ${this.name}`);
+        ctx.reply('Please enter your email address:');
+      } else if (!this.email) {
+        this.email = ctx.message.text;
+        this.logger.debug(`Submitted email: ${this.email}`);
+
+        this.logger.debug(`handleEventSelection 2 - ${this.currentEventId}`);
+        this.externalAPI.createTicket(
+          ctx.message.from.id.toString(),
+          this.currentEventId,
+        );
+
+        ctx.reply('Ticket Acquired');
+
+        //Clear variables
+        this.name = null;
+        this.email = null;
+        // Proceed with the next step in the conversation flow
+        // bot.action(`event-${event.id}`, () => {});
+      }
     });
   }
 }

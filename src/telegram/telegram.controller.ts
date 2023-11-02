@@ -22,7 +22,8 @@ export class TelegramController {
     this.bot.start((ctx) => this.handleStart(ctx));
     // this.bot.on('message', (ctx) => this.handleStart(ctx));
 
-    this.bot.action('button1', (ctx) => this.telegramService.bookTicket(ctx));
+    // this.bot.action('button1', (ctx) => this.telegramService.bookTicket(ctx));
+    this.bot.action('button1', (ctx) => this.telegramService.viewTickets(ctx));
     this.bot.action('button2', (ctx) =>
       this.telegramService.viewEvents(ctx, this.bot),
     );
@@ -30,21 +31,37 @@ export class TelegramController {
 
   private handleStart(ctx: Context) {
     this.logger.debug(ctx.message);
-    this.externalAPI.createUser(
+    // this.externalAPI.createUser(
+    //   ctx.message.from.id.toString(),
+    //   `${ctx.message.from.first_name} ${ctx.message.from.last_name}`,
+    // );
+
+    //Check if user is already registered
+    const userStatus = this.externalAPI.userManagment(
       ctx.message.from.id.toString(),
-      `${ctx.message.from.first_name} ${ctx.message.from.last_name}`,
     );
+
+    if (userStatus == null) {
+      this.externalAPI.createUser(
+        ctx.message.from.id.toString(),
+        `${ctx.message.from.first_name} ${ctx.message.from.last_name}`,
+      );
+    }
+
     const inlineKeyboardMarkup = {
       inline_keyboard: [
-        [{ text: 'Book Ticket', callback_data: 'button1' }],
+        [{ text: 'View Ticket', callback_data: 'button1' }],
         [{ text: 'View Events', callback_data: 'button2' }],
       ],
     };
 
-    ctx.reply('Welcome. How can I help you?', {
-      reply_markup: {
-        inline_keyboard: inlineKeyboardMarkup.inline_keyboard,
+    ctx.reply(
+      `Hello ${ctx.message.from.first_name}.\n Welcome to TicketWiz.\n How can I help you?`,
+      {
+        reply_markup: {
+          inline_keyboard: inlineKeyboardMarkup.inline_keyboard,
+        },
       },
-    });
+    );
   }
 }

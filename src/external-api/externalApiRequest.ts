@@ -16,10 +16,16 @@ interface User {
   submitedName: string;
 }
 
-interface GraphQLResponse {
-  data?: User;
-  errors?: any[];
-  response?: any;
+interface Users {
+  user: User;
+}
+
+interface Tickets {
+  tickets: Ticket[];
+}
+
+interface Ticket {
+  event: Event;
 }
 
 interface EventRequestApiResponse {
@@ -90,7 +96,8 @@ export class ExternalApiService {
     }
   }
 
-  async createTicket(telegramId, eventId): Promise<any> {
+  async createTicket(telegramId, eventId: string): Promise<any> {
+    this.logger.debug(`createTicket Event - ${eventId}`);
     const query = gql`
       mutation ($data: TicketCreateInput!) {
         createTicket(data: $data) {
@@ -128,5 +135,75 @@ export class ExternalApiService {
     }
   }
 
-  async
+  async userManagment(telegramID): Promise<any> {
+    const query = gql`
+      query User($where: UserWhereUniqueInput!) {
+        user(where: $where) {
+          name
+        }
+      }
+    `;
+
+    const variables = {
+      where: {
+        telegramId: telegramID,
+      },
+    };
+
+    try {
+      const data: Users = await request(this.endpoint, query, variables);
+      if (data.user != undefined) {
+        this.logger.debug(`data: ${data.user.name}`);
+        return data;
+      } else {
+        this.logger.debug(`User not there`);
+        return null;
+      }
+    } catch (error) {
+      console.error('Cannot verify user:', error);
+      throw new Error('Cannot verify user');
+    }
+  }
+
+  async checkTickets(): Promise<any> {
+    const query = gql`
+      query Tickets($where: TicketWhereInput!) {
+        tickets(where: $where) {
+          event {
+            name
+            description
+            venue
+            date
+            id
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      where: {
+        owner: {
+          telegramId: {
+            equals: '195156268',
+          },
+        },
+      },
+    };
+
+    try {
+      const data: Tickets = await request(this.endpoint, query, variables);
+      if (data == undefined) {
+        return undefined;
+      } else {
+        // this.logger.debug(data.tickets);
+        for (const ticket of data.tickets) {
+          this.logger.debug(`Event Name: ${ticket.event.name}`);
+        }
+        return data.tickets;
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Error creating user');
+    }
+  }
 }
