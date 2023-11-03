@@ -50,6 +50,8 @@ export class TelegramService {
   }
 
   public async viewTickets(ctx: Context) {
+
+    
     this.logger.debug(ctx.from.id.toString());
     this.tickets = await this.externalAPI.checkTickets(ctx.from.id.toString());
 
