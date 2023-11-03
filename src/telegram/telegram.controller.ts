@@ -29,7 +29,7 @@ export class TelegramController {
     );
   }
 
-  private handleStart(ctx: Context) {
+  private async handleStart(ctx: Context) {
     this.logger.debug(ctx.message);
     // this.externalAPI.createUser(
     //   ctx.message.from.id.toString(),
@@ -37,11 +37,12 @@ export class TelegramController {
     // );
 
     //Check if user is already registered
-    const userStatus = this.externalAPI.userManagment(
+    const userStatus = await this.externalAPI.userManagment(
       ctx.message.from.id.toString(),
     );
 
     if (userStatus == null) {
+      this.logger.debug(userStatus);
       this.externalAPI.createUser(
         ctx.message.from.id.toString(),
         `${ctx.message.from.first_name} ${ctx.message.from.last_name}`,

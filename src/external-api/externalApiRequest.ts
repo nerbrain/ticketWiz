@@ -152,7 +152,7 @@ export class ExternalApiService {
 
     try {
       const data: Users = await request(this.endpoint, query, variables);
-      if (data.user != undefined) {
+      if (data.user != undefined || data.user != null) {
         this.logger.debug(`data: ${data.user.name}`);
         return data;
       } else {
