@@ -22,6 +22,8 @@ export class TelegramService {
     this.events = await this.externalAPI.fetchDataFromExternalApi();
     this.logger.debug(`Events ${this.events}`);
 
+    if(this.events)
+    {
     const eventDisplayPromises = this.events.map((event) => {
       return ctx.reply(
         ` Event Name: ${event.name}\nEvent Description: ${event.description}\nEvent Venue: ${event.venue}\nEvent Date: ${event.date}\n`,
@@ -47,6 +49,9 @@ export class TelegramService {
         this.handleEventSelection(ctx, event.id, bot);
       });
     });
+    } else{
+      ctx.reply('There are no events avaliable');
+    }
   }
 
   public async viewTickets(ctx: Context) {

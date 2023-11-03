@@ -39,8 +39,9 @@ export class TelegramController {
     //Check if user is already registered
     const userStatus = this.externalAPI.userManagment(
       ctx.message.from.id.toString(),
+      
     );
-
+      
     if (userStatus == null) {
       this.externalAPI.createUser(
         ctx.message.from.id.toString(),
